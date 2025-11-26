@@ -4,25 +4,27 @@ import (
 	"log"
 	"net/http"
 
+	"streamly-backend/config"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
+	config.Load()
+	config.ConnectMongo()
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome"))
-	})
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	log.Println("Server listening on port 3000")
-	http.ListenAndServe(":3000", r)
+	addr := ":" + config.C.Port
+	log.Println("Starting server on", addr)
+	log.Fatal(http.ListenAndServe(addr, r))
 }
